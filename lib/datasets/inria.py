@@ -126,6 +126,9 @@ class inria(imdb):
         gt_classes = np.zeros((num_objs), dtype=np.int32)
         overlaps = np.zeros((num_objs, self.num_classes), dtype=np.float32)
 
+        # "Seg" area here is just the box area
+        seg_areas = np.zeros((num_objs), dtype=np.float32)
+
         # Load object bounding boxes into a data frame.
         for ix, obj in enumerate(objs):
             # Make pixel indexes 0-based
@@ -138,13 +141,15 @@ class inria(imdb):
             boxes[ix, :] = [x1, y1, x2, y2]
             gt_classes[ix] = cls
             overlaps[ix, cls] = 1.0
+            seg_areas[ix] = (x2 - x1 + 1) * (y2 - y1 + 1)
 
         overlaps = scipy.sparse.csr_matrix(overlaps)
 
         return {'boxes' : boxes,
                 'gt_classes': gt_classes,
                 'gt_overlaps' : overlaps,
-                'flipped' : False}
+                'flipped' : False,
+                'seg_areas' : seg_areas}
 
     def _write_inria_results_file(self, all_boxes):
         use_salt = self.config['use_salt']
