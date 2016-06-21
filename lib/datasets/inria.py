@@ -6,6 +6,7 @@
 # --------------------------------------------------------
 
 import os
+import errno
 from datasets.imdb import imdb
 import xml.dom.minidom as minidom
 import numpy as np
@@ -14,6 +15,8 @@ import scipy.io as sio
 import utils.cython_bbox
 import cPickle
 import subprocess
+import uuid
+from inria_eval import inria_eval
 
 class inria(imdb):
     def __init__(self, image_set, devkit_path):
@@ -26,6 +29,8 @@ class inria(imdb):
         self._class_to_ind = dict(zip(self.classes, xrange(self.num_classes)))
         self._image_ext = ['.jpg', '.png']
         self._image_index = self._load_image_set_index()
+        self._salt = str(uuid.uuid4())
+        self._comp_id = 'comp4'
 
         # Specific config options
         self.config = {'cleanup'  : True,
@@ -152,18 +157,11 @@ class inria(imdb):
                 'seg_areas' : seg_areas}
 
     def _write_inria_results_file(self, all_boxes):
-        use_salt = self.config['use_salt']
-        comp_id = 'comp4'
-        if use_salt:
-            comp_id += '-{}'.format(os.getpid())
-
-        # VOCdevkit/results/comp4-44503_det_test_aeroplane.txt
-        path = os.path.join(self._devkit_path, 'results', self.name, comp_id + '_')
         for cls_ind, cls in enumerate(self.classes):
             if cls == '__background__':
                 continue
             print 'Writing {} results file'.format(cls)
-            filename = path + 'det_' + self._image_set + '_' + cls + '.txt'
+            filename = self._get_inria_results_file_template().format(cls)
             with open(filename, 'wt') as f:
                 for im_ind, index in enumerate(self.image_index):
                     dets = all_boxes[cls_ind][im_ind]
@@ -175,4 +173,73 @@ class inria(imdb):
                                 format(index, dets[k, -1],
                                        dets[k, 0] + 1, dets[k, 1] + 1,
                                        dets[k, 2] + 1, dets[k, 3] + 1))
+
+    def evaluate_detections(self, all_boxes, output_dir):
+        self._write_inria_results_file(all_boxes)
+        self._do_python_eval(output_dir)
+        if self.config['cleanup']:
+            for cls in self._classes:
+                if cls == '__background__':
+                    continue
+                filename = self._get_inria_results_file_template().format(cls)
+                os.remove(filename)
+
+    def _get_comp_id(self):
+        comp_id = (self._comp_id + '_' + self._salt if self.config['use_salt']
+            else self._comp_id)
         return comp_id
+
+    def _get_inria_results_file_template(self):
+        # INRIAdevkit/results/comp4-44503_det_test_{%s}.txt
+        filename = self._get_comp_id() + '_det_' + self._image_set + '_{:s}.txt'
+        try:
+            os.mkdir(self._devkit_path + '/results')
+        except OSError as e:
+            if e.errno == errno.EEXIST:
+                pass
+            else:
+                raise e
+        path = os.path.join(
+            self._devkit_path,
+            'results',
+            filename)
+        return path
+
+    def _do_python_eval(self, output_dir = 'output'):
+        annopath = os.path.join(
+            self._data_path,
+            'Annotations',
+            '{:s}.txt')
+        imagesetfile = os.path.join(
+            self._data_path,
+            'ImageSets',
+            self._image_set + '.txt')
+        cachedir = os.path.join(self._devkit_path, 'annotations_cache')
+        aps = []
+        if not os.path.isdir(output_dir):
+            os.mkdir(output_dir)
+        for i, cls in enumerate(self._classes):
+            if cls == '__background__':
+                continue
+            filename = self._get_inria_results_file_template().format(cls)
+            rec, prec, ap = inria_eval(
+                filename, annopath, imagesetfile, cls, cachedir, ovthresh=0.5)
+            aps += [ap]
+            print('AP for {} = {:.4f}'.format(cls, ap))
+            with open(os.path.join(output_dir, cls + '_pr.pkl'), 'w') as f:
+                cPickle.dump({'rec': rec, 'prec': prec, 'ap': ap}, f)
+        print('Mean AP = {:.4f}'.format(np.mean(aps)))
+        print('~~~~~~~~')
+        print('Results:')
+        for ap in aps:
+            print('{:.3f}'.format(ap))
+        print('{:.3f}'.format(np.mean(aps)))
+        print('~~~~~~~~')
+        print('')
+        print('--------------------------------------------------------------')
+        print('Results computed with the **unofficial** Python eval code.')
+        print('Results should be very close to the official MATLAB eval code.')
+        print('Recompute with `./tools/reval.py --matlab ...` for your paper.')
+        print('-- Thanks, The Management')
+        print('--------------------------------------------------------------')
+
