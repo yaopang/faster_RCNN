@@ -15,23 +15,11 @@ You will also need to follow the installation steps from [the original py-faster
 
 ## Build the train-set
 
-### Get the Dataset
-When you download and extract the [Inria Person dataset](ftp://ftp.inrialpes.fr/pub/lear/douze/data/INRIAPerson.tar) you obtain this architecture:
-```
-|-- INRIAPerson/
-    |-- 70X134H96/
-    |-- 96X160H96/
-    |-- Test/
-    |-- test_64x128_H96/
-    |-- Train/
-    |-- train_64x128_H96/
-```
-
 ### Format the Dataset
 
 But we will use this common architecture for every dataset in $PY_FASTER_RCNN/data
 ```
-INRIA_Person_devkit/
+gaze_devkit/
 |-- data/
     |-- Annotations/
          |-- *.txt (Annotation files)
@@ -90,26 +78,25 @@ $ cp -r pascal_voc/VGG_CNN_M_1024/faster_rcnn_alt_opt/ INRIA_Person/
 ```
 
 It mainly concerns with the number of classes you want to train. Let's assume that the number of classes is C (do not forget to count the `background` class). Then you should 
-  - Modify `num_classes` to `C`;
+  - Modify num_classes in 'input-data' and 'roi-data' layer to C
   - Modify `num_output` in the `cls_score` layer to `C`
   - Modify `num_output` in the `bbox_pred` layer to `4 * C`
 
-Basically for our binary classifier (Person vs Background) C=2 and you have:
-    - 7 lines to be modified from 21 to 2
-    - 3 lines to be modified from 84 to 8
+In our case we have 11 classes (including background):
 ```sh
-$ grep 21 VGG_CNN_M_1024/faster_rcnn_alt_opt/*.pt
-   INRIA_Person/faster_rcnn_alt_opt/faster_rcnn_test.pt:    num_output: 21
-   INRIA_Person/faster_rcnn_alt_opt/stage1_fast_rcnn_train.pt:    param_str: "'num_classes': 21"
-   INRIA_Person/faster_rcnn_alt_opt/stage1_fast_rcnn_train.pt:    num_output: 21
-   INRIA_Person/faster_rcnn_alt_opt/stage1_rpn_train.pt:    param_str: "'num_classes': 21"
-   INRIA_Person/faster_rcnn_alt_opt/stage2_fast_rcnn_train.pt:    param_str: "'num_classes': 21"
-   INRIA_Person/faster_rcnn_alt_opt/stage2_fast_rcnn_train.pt:    num_output: 21
-   INRIA_Person/faster_rcnn_alt_opt/stage2_rpn_train.pt:    param_str: "'num_classes': 21"
-$ grep 84 VGG_CNN_M_1024/faster_rcnn_alt_opt/*.pt
-   INRIA_Person/faster_rcnn_alt_opt/faster_rcnn_test.pt:    num_output: 84
-   INRIA_Person/faster_rcnn_alt_opt/stage1_fast_rcnn_train.pt:    num_output: 84
-   INRIA_Person/faster_rcnn_alt_opt/stage2_fast_rcnn_train.pt:    num_output: 84
+$ grep 11 models/gaze_model/faster_rcnn_alt_opt/*.pt
+faster_rcnn_test.pt:    num_output: 11
+stage1_fast_rcnn_train.pt:    param_str: "'num_classes': 11"
+stage1_fast_rcnn_train.pt:    num_output: 11
+stage1_rpn_train.pt:    param_str: "'num_classes': 11"
+stage2_fast_rcnn_train.pt:    param_str: "'num_classes': 11"
+stage2_fast_rcnn_train.pt:    num_output: 11
+stage2_rpn_train.pt:    param_str: "'num_classes': 11"
+
+$ grep 44 models/gaze_model/faster_rcnn_alt_opt/*.pt
+faster_rcnn_test.pt:    num_output: 44
+stage1_fast_rcnn_train.pt:    num_output: 44
+stage2_fast_rcnn_train.pt:    num_output: 44
 ```
 
 ## Build config file
@@ -125,7 +112,7 @@ $ echo 'MODELS_DIR: "$PY_FASTER_RCNN/models"' >> config.yml
 In the directory $PY_FASTER_RCNN, run the following command in the shell.
 
 ```sh
-$ ./tools/train_faster_rcnn_alt_opt.py --gpu 0 --net_name INRIA_Person --weights data/imagenet_models/VGG_CNN_M_1024.v2.caffemodel --imdb inria_train --cfg config.yml
+$ ./tools/train_faster_rcnn_alt_opt.py --gpu 0 --net_name gaze_model --weights data/imagenet_models/VGG_CNN_M_1024.v2.caffemodel --imdb gaze_train 
 ```
 
 Where:    
@@ -135,9 +122,5 @@ Where:
 >--imdb is the full name of the database as specified in the lib/datasets/factory.py file    
 >    (nb: dont forget to add the test/train suffix !)    
 
-Or the following connection-proof version if you're afraid of ctrl+C or using your hardware remotely like me :)
-```sh
-$ nohup ./tools/train_faster_rcnn_alt_opt.py --gpu 0 --net_name INRIA_Person --weights data/imagenet_models/VGG_CNN_M_1024.v2.caffemodel --imdb inria_train --cfg config.yml &
-$ tail nohup.out
-```
-(Just needs you to launch a "$ killall python" to interrupt training. Yes...)
+If you're sshing to the server, use ```screen``` to keep process running if connection drops unexpectedly.
+
