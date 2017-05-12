@@ -1,8 +1,8 @@
-# Train Py-Faster-RCNN on Another Dataset
+# Train Py-Faster-RCNN with a Gaze Dataset
 
 This tutorial is a fine-tuned clone of [zeyuanxy's one](https://github.com/zeyuanxy/fast-rcnn/tree/master/help/train) for the [py-faster-rcnn](https://github.com/rbgirshick/py-faster-rcnn) code.
 
-We will illustrate how to train Py-Faster-RCNN on another dataset in the following steps, and we will take **INRIA Person** as the example dataset.
+We will illustrate how to train Py-Faster-RCNN on another dataset in the following steps, and we will take the **gaze database from RadLabs** as the example dataset.
 
 ## Clone py-faster-rcnn repository
 The current tutorial need you to have clone and tested the regular py-faster-rcnn repository from rbgirshick.
@@ -33,16 +33,16 @@ A simple way to achieve it is to use symbolic links:
 (this is only an example for training, some refactoring will be needing in order to use the testset properly)
 ```sh
 $ cd $PY_FASTER_RCNN/data
-$ mkdir INRIA_Person_devkit/
-$ mkdir INRIA_Person_devkit/data/
-$ ln -s <INRIAPerson>/Train/annotations/ INRIA_Person_devkit/data/Annotations
-$ ln -s <INRIAPerson>/Train/pos/ INRIA_Person_devkit/data/Images
+$ mkdir gaze_devkit/
+$ mkdir gaze_devkit/data/
+$ ln -s <path/of/gaze/database>/Annotations/ gaze_devkit/data/Annotations
+$ ln -s <path/of/gase/database>/Images/ gaze_devkit/data/Images
 ```
 
 Now we need to write `train.txt` that contains all the names(without extensions) of images files that will be used for training.
 Basically with the following:
 ```sh
-$ cd $PY_FASTER_RCNN/data/INRIA_Person_devkit/data/
+$ cd $PY_FASTER_RCNN/data/gaze_devkit/data/
 $ mkdir ImageSets
 $ ls Annotations/ -m | sed s/\\s/\\n/g | sed s/.txt//g | sed s/,//g > ImageSets/train.txt
 ```
@@ -56,14 +56,14 @@ You need to add a new python file describing the dataset we will use to the dire
 
 ### Update lib/datasets/factory.py
 
-Then you should modify the [factory.py](https://github.com/deboc/py-faster-rcnn/blob/master/lib/datasets/factory.py) in the same directory. For example, to add **INRIA Person**, we should add
+Then you should modify the [factory.py](https://github.com/deboc/py-faster-rcnn/blob/master/lib/datasets/factory.py) in the same directory. For example, to add **gaze database**, we should add
 
 ```py
-from datasets.inria import inria
-inria_devkit_path = '$PY_FASTER_RCNN/data/INRIA_Person_devkit'
+from datasets.gaze import gaze
+gaze_devkit_path = '$PY_FASTER_RCNN/data/gaze_devkit'
 for split in ['train', 'test']:
-    name = '{}_{}'.format('inria', split)
-    __sets[name] = (lambda split=split: inria(split, inria_devkit_path))
+    name = '{}_{}'.format('gaze', split)
+    __sets[name] = (lambda split=split: gaze(split, gaze_devkit_path))
 ```
 **NB** : $PY_FASTER_RCNN must be replaced by its actual value !
 
@@ -73,30 +73,30 @@ For example, if you want to use the model **VGG_CNN_M_1024** with alternated opt
 
 ```sh
 $ cd $PY_FASTER_RCNN/models/
-$ mkdir INRIA_Person/
-$ cp -r pascal_voc/VGG_CNN_M_1024/faster_rcnn_alt_opt/ INRIA_Person/
+$ mkdir gaze_model/
+$ cp -r pascal_voc/VGG_CNN_M_1024/faster_rcnn_alt_opt/ gaze_model/
 ```
 
 It mainly concerns with the number of classes you want to train. Let's assume that the number of classes is C (do not forget to count the `background` class). Then you should 
-  - Modify num_classes in 'input-data' and 'roi-data' layer to C
-  - Modify `num_output` in the `cls_score` layer to `C`
-  - Modify `num_output` in the `bbox_pred` layer to `4 * C`
+  - Modify num_classes in 'RoIDataLayer' layer to 'C'
+  - Modify `num_output` in the `cls_score` layer to 'C'
+  - Modify `num_output` in the `bbox_pred` layer to '4 * C'
 
-In our case we have 11 classes (including background):
+In our case we have 12 classes (including background):
 ```sh
-$ grep 11 models/gaze_model/faster_rcnn_alt_opt/*.pt
-faster_rcnn_test.pt:    num_output: 11
-stage1_fast_rcnn_train.pt:    param_str: "'num_classes': 11"
-stage1_fast_rcnn_train.pt:    num_output: 11
-stage1_rpn_train.pt:    param_str: "'num_classes': 11"
-stage2_fast_rcnn_train.pt:    param_str: "'num_classes': 11"
-stage2_fast_rcnn_train.pt:    num_output: 11
-stage2_rpn_train.pt:    param_str: "'num_classes': 11"
+$ grep 12 models/gaze_model/faster_rcnn_alt_opt/*.pt
+faster_rcnn_test.pt:    num_output: 12
+stage1_fast_rcnn_train.pt:    param_str: "'num_classes': 12"
+stage1_fast_rcnn_train.pt:    num_output: 12
+stage1_rpn_train.pt:    param_str: "'num_classes': 12"
+stage2_fast_rcnn_train.pt:    param_str: "'num_classes': 12"
+stage2_fast_rcnn_train.pt:    num_output: 12
+stage2_rpn_train.pt:    param_str: "'num_classes': 12"
 
-$ grep 44 models/gaze_model/faster_rcnn_alt_opt/*.pt
-faster_rcnn_test.pt:    num_output: 44
-stage1_fast_rcnn_train.pt:    num_output: 44
-stage2_fast_rcnn_train.pt:    num_output: 44
+$ grep 48 models/gaze_model/faster_rcnn_alt_opt/*.pt
+faster_rcnn_test.pt:    num_output: 48
+stage1_fast_rcnn_train.pt:    num_output: 48
+stage2_fast_rcnn_train.pt:    num_output: 48
 ```
 
 ## Build config file
