@@ -15,6 +15,13 @@ You will also need to follow the installation steps from [the original py-faster
 
 ## Build the train-set
 
+### Labeling
+
+Options to label your images include:
+1) Matlab
+or
+2) ```https://github.com/tzutalin/labelImg```
+
 ### Format the Dataset
 
 But we will use this common architecture for every dataset in $PY_FASTER_RCNN/data
