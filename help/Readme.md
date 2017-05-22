@@ -34,6 +34,7 @@ gaze_devkit/
          |-- *.jpg or *.png (Image files)
     |-- ImageSets/
          |-- train.txt
+         |-- val.txt
 ```
 
 A simple way to achieve it is to use symbolic links:
