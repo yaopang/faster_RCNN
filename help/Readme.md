@@ -131,3 +131,12 @@ Where:
 
 If you're sshing to the server, use ```screen``` to keep process running if connection drops unexpectedly.
 
+# Testing Py-Faster-RCNN 
+
+Run this line to test your model:
+```
+$ cd $PY_FASTER_RCNN/
+$ ./tools/test_net.py --gpu 0 --def models/gaze_model_end2end/test.prototxt --net output/faster_rcnn_end2end/train/vgg_cnn_m_1024_gaze_end2end_iter_20000.caffemodel --imdb gaze_val --cfg experiments/cfgs/faster_rcnn_end2end.yml 
+```
+
+
