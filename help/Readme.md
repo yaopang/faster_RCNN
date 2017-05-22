@@ -57,8 +57,8 @@ $ ls Annotations/ -m | sed s/\\s/\\n/g | sed s/.txt//g | sed s/,//g > ImageSets/
 ### Add lib/datasets/yourdatabase.py
 You need to add a new python file describing the dataset we will use to the directory `$PY_FASTER_RCNN/lib/datasets`, see [inria.py](https://github.com/deboc/py-faster-rcnn/blob/master/lib/datasets/inria.py). Then the following steps should be taken.
   - Modify `self._classes` in the constructor function to fit your dataset.
-  - Be careful with the extensions of your image files. See `image_path_from_index` in `inria.py`.
-  - Write the function for parsing annotations. See `_load_inria_annotation` in `inria.py`.
+  - Be careful with the extensions of your image files. See `image_path_from_index` in `gaze.py`.
+  - Write the function for parsing annotations. See `_load_gaze_annotation` in `gaze.py`.
   - Do not forget to add `import` syntaxes in your own python file and other python files in the same directory.
 
 ### Update lib/datasets/factory.py
@@ -68,7 +68,7 @@ Then you should modify the [factory.py](https://github.com/deboc/py-faster-rcnn/
 ```py
 from datasets.gaze import gaze
 gaze_devkit_path = '$PY_FASTER_RCNN/data/gaze_devkit'
-for split in ['train', 'test']:
+for split in ['train', 'val']:
     name = '{}_{}'.format('gaze', split)
     __sets[name] = (lambda split=split: gaze(split, gaze_devkit_path))
 ```
