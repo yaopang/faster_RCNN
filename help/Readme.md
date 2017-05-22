@@ -2,7 +2,7 @@
 
 This tutorial is a fine-tuned clone of [zeyuanxy's one](https://github.com/zeyuanxy/fast-rcnn/tree/master/help/train) for the [py-faster-rcnn](https://github.com/rbgirshick/py-faster-rcnn) code.
 
-We will illustrate how to train Py-Faster-RCNN on another dataset in the following steps, and we will take the **gaze database from RadLabs** as the example dataset.
+We will illustrate how to train Py-Faster-RCNN on another dataset in the following steps, and we will take the **gaze database from UCSD RadLabs** as the example dataset.
 
 ## Clone py-faster-rcnn repository
 The current tutorial need you to have clone and tested the regular py-faster-rcnn repository from rbgirshick.
@@ -31,7 +31,7 @@ gaze_devkit/
     |-- Annotations/
          |-- *.txt (Annotation files)
     |-- Images/
-         |-- *.png (Image files)
+         |-- *.jpg or *.png (Image files)
     |-- ImageSets/
          |-- train.txt
 ```
@@ -76,7 +76,9 @@ for split in ['train', 'val']:
 
 ## Adapt the network model
 
-For example, if you want to use the model **VGG_CNN_M_1024** with alternated optimizations, then you should adapt the solvers in `$PY_FASTER_RCNN/models/VGG_CNN_M_1024/faster_rcnn_alt_opt/`
+In this example, we will use the model **VGG_CNN_M_1024** with alternated optimizations (alt opt). First, you should adapt the solvers in `$PY_FASTER_RCNN/models/VGG_CNN_M_1024/faster_rcnn_alt_opt/`
+
+**NB** : If you want to use the end2end method, refer to https://huangying-zhan.github.io/2016/09/22/detection-faster-rcnn.html. 
 
 ```sh
 $ cd $PY_FASTER_RCNN/models/
