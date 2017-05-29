@@ -141,5 +141,37 @@ Run this line to test your model:
 $ cd $PY_FASTER_RCNN/
 $ ./tools/test_net.py --gpu 0 --def models/gaze_model_end2end/test.prototxt --net output/faster_rcnn_end2end/train/vgg_cnn_m_1024_gaze_end2end_iter_20000.caffemodel --imdb gaze_val --cfg experiments/cfgs/faster_rcnn_end2end.yml 
 ```
+## Train with end2end method
 
+### 1. Rename the layers
 
+In the `test.prototxt` and the `train.prototxt` files, rename `"cls_score"` and `"bbox_pred"` to different names. For example,
+```
+name: "cls_score" -> name: "cls_score_object"
+name: "bbox_pred" -> name: "bbox_pred_object"
+```
+> If you are using find and replace, include the quotations!
+
+### 2. First fine tuning
+
+The purpose of first fine-tuning is to get a caffemodel which has two outputs at final fully-connected layers. 
+```
+./tools/train_net.py --gpu 0 --weights data/faster_rcnn_models/VGG16_faster_rcnn_final.caffemodel --imdb gaze_train --cfg experiments/cfgs/faster_rcnn_end2end.yml --solver models/gaze_model/solver.prototxt --iter 0
+```
+
+### 3. Rename layers back
+
+Rename the layers back to the original name from step 1.
+
+### 4. Delete cache
+
+Before training on your new dataset, you may need to check $FRCN/data/cache to remove caches if necessary. Caches stores information of previously trained dataset. It may cause problem while training.
+
+### 5. Second fine tuning
+
+This fine-tuning should train models for our final use. The pre-trained model in this stage is the model we saved in stage 2. 
+```
+./tools/train_net.py --gpu 0 --weights output/faster_rcnn_end2end/train/gaze_faster_rcnn_iter_0.caffemodel --imdb gaze_train --cfg experiments/cfgs/faster_rcnn_end2end.yml --solver models/gaze_vgg16/solver.prototxt --iter 10000
+```
+
+Use `https://huangying-zhan.github.io/2016/09/22/detection-faster-rcnn.html` as reference
