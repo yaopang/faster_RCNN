@@ -40,11 +40,11 @@ gaze_devkit/
 A simple way to achieve it is to use symbolic links:
 (this is only an example for training, some refactoring will be needing in order to use the testset properly)
 ```sh
-$ cd $PY_FASTER_RCNN/data
+$ cd py-faster-rcnn/data
 $ mkdir gaze_devkit/
 $ mkdir gaze_devkit/data/
-$ ln -s <path/of/gaze/database>/Annotations/ gaze_devkit/data/Annotations
-$ ln -s <path/of/gase/database>/Images/ gaze_devkit/data/Images
+$ ln -s <path of your database>/gaze_devkit/data/Annotations
+$ ln -s <patth of your database>/gaze_devkit/data/Images
 ```
 
 Now we need to write `train.txt` that contains all the names(without extensions) of images files that will be used for training.
